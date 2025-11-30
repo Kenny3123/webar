@@ -10,21 +10,17 @@
   <script src="https://unpkg.com/@ar-js-org/ar.js@3.4.0/aframe/build/aframe-ar.min.js"></script>
 
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body, .a-canvas {
-      width: 100%;
+    * { margin: 0; padding: 0; }
+    html, body {
       height: 100%;
       overflow: hidden;
       background: #000;
     }
-    /* Важно: принудительно растягиваем видеопоток */
     .arjs-video {
       width: 100vw !important;
       height: 100vh !important;
       object-fit: cover !important;
     }
-
-    /* FPS */
     #fps {
       position: fixed;
       top: 10px;
@@ -38,8 +34,6 @@
       z-index: 9999;
       pointer-events: none;
     }
-
-    /* UI */
     #ui {
       position: fixed;
       bottom: 20px;
@@ -64,24 +58,21 @@
     <button onclick="loadModel('low.glb')">🔽 Low</button>
     <button onclick="loadModel('mid.glb')">🔸 Mid</button>
     <button onclick="loadModel('high.glb')">🔼 High</button>
-<div id="cameraStatus" style="position: fixed; top: 50px; left: 10px; color: yellow; z-index: 9999;">
-  Камера: --
-</div>
   </div>
 
-  <!-- ВАЖНО: embedded + video settings -->
+  <!-- 🎯 Просто AR без маркера — модель в центре -->
   <a-scene
     embedded
-    arjs="sourceType: webcam;
-          sourceWidth: 1280;
-          sourceHeight: 720;
-          displayWidth: 1920;
-          displayHeight: 1080;
+    arjs="sourceType: webcam; 
+          sourceWidth: 1280; 
+          sourceHeight: 720; 
+          displayWidth: 100%; 
+          displayHeight: 100%; 
           debugUIEnabled: false;"
-    renderer="logarithmicDepthBuffer: true;
-              antialias: true;"
+    renderer="antialias: true;"
     vr-mode-ui="enabled: false"
   >
+    <!-- Модель будет здесь -->
     <a-entity id="modelRoot" position="0 0 -2"></a-entity>
     <a-entity camera look-controls="enabled: false"></a-entity>
   </a-scene>
@@ -102,34 +93,32 @@
       requestAnimationFrame(tick);
     }
     tick();
-navigator.mediaDevices.getUserMedia({ video: true })
-  .then(stream => {
-    document.getElementById('cameraStatus').textContent = 'Камера: ✅ Разрешена';
-    // Можно даже показать поток в видео (для отладки)
-    // const video = document.createElement('video');
-    // video.srcObject = stream;
-    // video.play();
-  })
-  .catch(err => {
-    document.getElementById('cameraStatus').textContent = 'Камера: ❌ Ошибка: ' + err.name;
-  });
-    // Loader
-    AFRAME.registerComponent('init-loader', {
+
+    // Загрузка моделей
+    AFRAME.registerComponent('loader', {
       init: function () {
         window.loadModel = (url) => {
           const root = document.getElementById('modelRoot');
-          // Удаляем всё
-          while (root.firstChild) root.removeChild(root.firstChild);
-          // Добавляем модель
-          const e = document.createElement('a-entity');
-          e.setAttribute('gltf-model', url);
-          e.setAttribute('scale', '0.5 0.5 0.5');
-          root.appendChild(e);
+          
+          // Удаляем старую модель
+          while (root.firstChild) {
+            root.removeChild(root.firstChild);
+          }
+
+          // Создаём новую через A-Frame (не через THREE!)
+          const model = document.createElement('a-entity');
+          model.setAttribute('gltf-model', url);
+          model.setAttribute('scale', '0.5 0.5 0.5');
+          model.setAttribute('position', '0 0 0');
+          root.appendChild(model);
         };
+
+        // Старт с Low
         setTimeout(() => loadModel('low.glb'), 1000);
       }
     });
-    document.querySelector('a-scene').setAttribute('init-loader', '');
+
+    document.querySelector('a-scene').setAttribute('loader', '');
   </script>
 </body>
 </html>
