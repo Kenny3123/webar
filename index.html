@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebAR LOD Test</title>
+
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.147/examples/js/loaders/GLTFLoader.js"></script>
+
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #ui {
+      position: fixed;
+      bottom: 20px;
+      left: 0; width: 100%;
+      text-align: center;
+      z-index: 20;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 16px;
+      font-size: 18px;
+      background: #4267f5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="ui">
+    <button onclick="loadModel('low.glb')">Low</button>
+    <button onclick="loadModel('mid.glb')">Mid</button>
+    <button onclick="loadModel('high.glb')">High</button>
+  </div>
+
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+  >
+    <a-marker preset="hiro">
+      <a-entity id="modelRoot"></a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    let currentModel = null;
+
+    function loadModel(url) {
+      const root = document.querySelector("#modelRoot");
+
+      if (currentModel) {
+        root.remove(currentModel);
+        currentModel = null;
+      }
+
+      const loader = new THREE.GLTFLoader();
+      loader.load(url, gltf => {
+        currentModel = gltf.scene;
+        currentModel.scale.set(0.5, 0.5, 0.5);
+        root.appendChild(currentModel);
+      });
+    }
+  </script>
+
+</body>
+</html>
