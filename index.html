@@ -63,14 +63,8 @@
   <!-- 🎯 Просто AR без маркера — модель в центре -->
   <a-scene
     embedded
-    arjs="sourceType: webcam; 
-          sourceWidth: 1280; 
-          sourceHeight: 720; 
-          displayWidth: 100%; 
-          displayHeight: 100%; 
-          debugUIEnabled: false;"
-    renderer="antialias: true;"
     vr-mode-ui="enabled: false"
+    arjs="sourceType: webcam; debugUIEnabled: false;"
   >
     <!-- Модель будет здесь -->
     <a-entity id="modelRoot" position="0 0 -2"></a-entity>
