@@ -64,6 +64,9 @@
     <button onclick="loadModel('low.glb')">🔽 Low</button>
     <button onclick="loadModel('mid.glb')">🔸 Mid</button>
     <button onclick="loadModel('high.glb')">🔼 High</button>
+<div id="cameraStatus" style="position: fixed; top: 50px; left: 10px; color: yellow; z-index: 9999;">
+  Камера: --
+</div>
   </div>
 
   <!-- ВАЖНО: embedded + video settings -->
@@ -99,7 +102,17 @@
       requestAnimationFrame(tick);
     }
     tick();
-
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
+    document.getElementById('cameraStatus').textContent = 'Камера: ✅ Разрешена';
+    // Можно даже показать поток в видео (для отладки)
+    // const video = document.createElement('video');
+    // video.srcObject = stream;
+    // video.play();
+  })
+  .catch(err => {
+    document.getElementById('cameraStatus').textContent = 'Камера: ❌ Ошибка: ' + err.name;
+  });
     // Loader
     AFRAME.registerComponent('init-loader', {
       init: function () {
