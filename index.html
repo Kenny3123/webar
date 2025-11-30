@@ -2,72 +2,131 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>WebAR LOD Test</title>
 
+  <!-- Правильные ссылки — БЕЗ ПРОБЕЛОВ -->
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.147/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://unpkg.com/@ar-js-org/ar.js@3.4.0/aframe/build/aframe-ar.min.js"></script>
 
   <style>
-    body { margin: 0; overflow: hidden; }
+    * { margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
     #ui {
       position: fixed;
       bottom: 20px;
-      left: 0; width: 100%;
+      left: 0;
+      width: 100%;
       text-align: center;
       z-index: 20;
     }
     button {
       margin: 5px;
-      padding: 10px 16px;
+      padding: 12px 20px;
       font-size: 18px;
       background: #4267f5;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    /* FPS-монитор */
+    #fps {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #00ff00; /* Зелёный */
+      padding: 6px 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      border-radius: 4px;
+      z-index: 999;
+      pointer-events: none;
     }
   </style>
 </head>
-
 <body>
+  <!-- FPS-счётчик -->
+  <div id="fps">FPS: --</div>
+
   <div id="ui">
-    <button onclick="loadModel('low.glb')">Low</button>
-    <button onclick="loadModel('mid.glb')">Mid</button>
-    <button onclick="loadModel('high.glb')">High</button>
+    <button onclick="loadModel('low.glb')">🔽 Low</button>
+    <button onclick="loadModel('mid.glb')">🔸 Mid</button>
+    <button onclick="loadModel('high.glb')">🔼 High</button>
   </div>
 
+  <!-- Полноэкранный AR без маркера -->
   <a-scene
-    embedded
+    arjs="sourceType: webcam; 
+          sourceWidth: 1280; 
+          sourceHeight: 720; 
+          displayWidth: 100%; 
+          displayHeight: 100%; 
+          debugUIEnabled: false;"
+    renderer="antialias: true;
+              sortObjects: true;
+              physicallyCorrectLights: true;"
     vr-mode-ui="enabled: false"
-    arjs="sourceType: webcam; debugUIEnabled: false;"
   >
-    <a-marker preset="hiro">
-      <a-entity id="modelRoot"></a-entity>
-    </a-marker>
-
-    <a-entity camera></a-entity>
+    <a-entity id="modelRoot" position="0 0 -2"></a-entity>
+    <a-entity camera look-controls="enabled: false"></a-entity>
   </a-scene>
 
   <script>
-    let currentModel = null;
+    // FPS-монитор
+    const fpsElement = document.getElementById('fps');
+    let frameCount = 0;
+    let lastTime = performance.now();
+    let fps = 0;
 
-    function loadModel(url) {
-      const root = document.querySelector("#modelRoot");
+    function updateFPS() {
+      frameCount++;
+      const now = performance.now();
+      const delta = now - lastTime;
 
-      if (currentModel) {
-        root.remove(currentModel);
-        currentModel = null;
+      if (delta >= 1000) { // раз в секунду
+        fps = Math.round((frameCount * 1000) / delta);
+        fpsElement.textContent = `FPS: ${fps}`;
+        frameCount = 0;
+        lastTime = now;
       }
 
-      const loader = new THREE.GLTFLoader();
-      loader.load(url, gltf => {
-        currentModel = gltf.scene;
-        currentModel.scale.set(0.5, 0.5, 0.5);
-        root.appendChild(currentModel);
-      });
+      requestAnimationFrame(updateFPS);
     }
-  </script>
 
+    // Запускаем FPS-счётчик
+    updateFPS();
+
+    // Загрузчик моделей
+    AFRAME.registerComponent('loader', {
+      init: function () {
+        window.loadModel = (url) => {
+          const root = document.getElementById('modelRoot');
+
+          // Удаляем старую модель
+          while (root.firstChild) {
+            root.removeChild(root.firstChild);
+          }
+
+          // Добавляем новую через A-Frame
+          const model = document.createElement('a-entity');
+          model.setAttribute('gltf-model', url);
+          model.setAttribute('scale', '0.5 0.5 0.5');
+          model.setAttribute('position', '0 0 0');
+          root.appendChild(model);
+        };
+
+        setTimeout(() => loadModel('low.glb'), 1500);
+      }
+    });
+
+    document.querySelector('a-scene').setAttribute('loader', '');
+  </script>
 </body>
 </html>
