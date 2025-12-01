@@ -2,26 +2,22 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebAR LOD Test</title>
 
-  <!-- Рабочие ссылки — БЕЗ ПРОБЕЛОВ -->
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script src="https://unpkg.com/@ar-js-org/ar.js@3.4.0/aframe/build/aframe-ar.min.js"></script>
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/dev/aframe/build/aframe-ar.js"></script>
 
   <style>
-    * { margin: 0; padding: 0; }
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      background: #000;
+    body { margin: 0; overflow: hidden; }
+    #ui {
+      position: fixed;
+      bottom: 20px;
+      left: 0; width: 100%;
+      text-align: center;
+      z-index: 20;
     }
-    .arjs-video {
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: cover !important;
-    }
-    #fps {
+#fps {
       position: fixed;
       top: 10px;
       right: 10px;
@@ -34,45 +30,41 @@
       z-index: 9999;
       pointer-events: none;
     }
-    #ui {
-      position: fixed;
-      bottom: 20px;
-      width: 100%;
-      text-align: center;
-      z-index: 9999;
-    }
     button {
-      margin: 5px;
-      padding: 12px 20px;
-      font-size: 18px;
+      margin: 10px;
+      padding: 20px 32px;
+      font-size: 22px;
       background: #4267f5;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
     }
   </style>
 </head>
+
 <body>
+
   <div id="fps">FPS: --</div>
+
   <div id="ui">
-    <button onclick="loadModel('low.glb')">🔽 Low</button>
-    <button onclick="loadModel('mid.glb')">🔸 Mid</button>
-    <button onclick="loadModel('high.glb')">🔼 High</button>
+    <button onclick="loadModel('low.glb')">Low(1k)</button>
+    <button onclick="loadModel('mid.glb')">Mid(6k)</button>
+    <button onclick="loadModel('high.glb')">High(25k)</button>
   </div>
 
-  <!-- 🎯 Просто AR без маркера — модель в центре -->
   <a-scene
     embedded
     vr-mode-ui="enabled: false"
     arjs="sourceType: webcam; debugUIEnabled: false;"
   >
-    <!-- Модель будет здесь -->
-    <a-entity id="modelRoot" position="0 0 -2"></a-entity>
-    <a-entity camera look-controls="enabled: false"></a-entity>
+    <a-marker preset="hiro">
+      <a-entity id="modelRoot"></a-entity>
+    </a-marker>
+    <a-entity camera></a-entity>
   </a-scene>
 
   <script>
-    // FPS
+    // ✅ FPS
     const fpsEl = document.getElementById('fps');
     let frames = 0;
     let last = performance.now();
@@ -88,31 +80,26 @@
     }
     tick();
 
-    // Загрузка моделей
-    AFRAME.registerComponent('loader', {
-      init: function () {
-        window.loadModel = (url) => {
-          const root = document.getElementById('modelRoot');
-          
-          // Удаляем старую модель
-          while (root.firstChild) {
-            root.removeChild(root.firstChild);
-          }
-
-          // Создаём новую через A-Frame (не через THREE!)
-          const model = document.createElement('a-entity');
-          model.setAttribute('gltf-model', url);
-          model.setAttribute('scale', '0.5 0.5 0.5');
-          model.setAttribute('position', '0 0 0');
-          root.appendChild(model);
-        };
-
-        // Старт с Low
-        setTimeout(() => loadModel('low.glb'), 1000);
+    // ✅ Рабочая загрузка моделей
+    function loadModel(url) {
+      const root = document.getElementById('modelRoot');
+      
+      // Удаляем старую модель
+      while (root.firstChild) {
+        root.removeChild(root.firstChild);
       }
-    });
 
-    document.querySelector('a-scene').setAttribute('loader', '');
+      // Создаём новую через A-Frame (без THREE!)
+      const model = document.createElement('a-entity');
+      model.setAttribute('gltf-model', url);
+      model.setAttribute('position', '0 0 0');
+      model.setAttribute('scale', '1 1 1');
+      model.setAttribute('rotation', '270 180 180'); // чтобы модель смотрела на камеру
+      root.appendChild(model);
+    }
+
+    // Загружаем Low при старте
+    setTimeout(() => loadModel('low.glb'), 1500);
   </script>
 </body>
 </html>
